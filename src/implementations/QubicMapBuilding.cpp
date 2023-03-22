@@ -35,7 +35,7 @@ void QubicMapBuilding::buildInternals() {
     this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
 
     this->map.resize(zippedXs.size());
-    for (int i = 0; i < zippedXs.size(); ++i) {
+    for (std::size_t i = 0; i < zippedXs.size(); ++i) {
         this->map[i].resize(this->zippedYs.size());
     }
 
