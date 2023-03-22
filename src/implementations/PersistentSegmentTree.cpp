@@ -23,7 +23,6 @@ int PersistentSegmentTree::queryPoint(const Point& point)
     }
     int zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1;
     int zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1;
-    // std::cout << "int" << zippedXIdx << ' ' << zippedYIdx << std::endl;
     std::shared_ptr<Node> targetRoot = this->roots[findUpperPos(this->zippedRootsXIdxs, zippedXIdx) - 1];
     return getTotalSum(targetRoot, 0, this->zippedYs.size(), zippedYIdx);
 }
@@ -124,7 +123,4 @@ void PersistentSegmentTree::buildInternals() {
     }
     this->zippedRootsXIdxs.push_back(prevZippedX);
     this->roots.push_back(root);
-    // for (std::size_t i = 0u; i < this->zippedRootsXIdxs.size(); ++i) {
-    //     std::cout << i << ' ' << this->zippedRootsXIdxs[i] << std::endl;
-    // }
 }
