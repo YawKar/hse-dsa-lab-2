@@ -1,4 +1,3 @@
-#include "./NaiveRectangleEnumeration.h"
 #include "NaiveRectangleEnumeration.h"
 
 NaiveRectangleEnumeration::NaiveRectangleEnumeration(std::vector<Rectangle>&& rectangles) 
