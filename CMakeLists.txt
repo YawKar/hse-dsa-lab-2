@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(benchmark REQUIRED)
 
 # Add subfolders
-SET(IMPLEMENTATIONS src/implementations/NaiveRectangleEnumeration.cpp)
+SET(IMPLEMENTATIONS src/implementations/NaiveRectangleEnumeration.cpp src/implementations/QubicMapBuilding.cpp)
 SET(COMMON src/common/TestCaseGenerator.cpp)
 
 # Combine main with all other
