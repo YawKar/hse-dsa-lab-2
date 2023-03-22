@@ -1,5 +1,5 @@
 [requires]
-fmt/9.1.0
+benchmark/1.7.1
 
 [generators]
 CMakeDeps
