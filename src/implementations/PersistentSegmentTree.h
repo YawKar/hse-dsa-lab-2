@@ -34,7 +34,6 @@ protected:
     int findPos(std::vector<int>& items, int target);
     int findUpperPos(std::vector<int>& items, int target);
     void makeZippedCoordsFromRectangles();
-    void buildTree(std::shared_ptr<Node> root, int left, int right);
     std::shared_ptr<Node> addWithPersistence(std::shared_ptr<Node> root, int left, int right, int rangeStart, int rangeEnd, int value);
     int getTotalSum(std::shared_ptr<Node> root, int left, int right, int targetIdx);
 };

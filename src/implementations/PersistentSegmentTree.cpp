@@ -32,15 +32,21 @@ void PersistentSegmentTree::makeZippedCoordsFromRectangles() {
         this->zippedXs.push_back(rect.leftDown.x);
         this->zippedXs.push_back(rect.rightUp.x);
         this->zippedXs.push_back(rect.rightUp.x + 1);
+    }
+    
+    std::sort(this->zippedXs.begin(), this->zippedXs.end());
+    this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
+    this->zippedXs.shrink_to_fit();
+
+    for (const auto& rect : this->rectangles) {
         this->zippedYs.push_back(rect.leftDown.y);
         this->zippedYs.push_back(rect.rightUp.y);
         this->zippedYs.push_back(rect.rightUp.y + 1);
     }
-    
-    std::sort(this->zippedXs.begin(), this->zippedXs.end());
+
     std::sort(this->zippedYs.begin(), this->zippedYs.end());
-    this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
     this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
+    this->zippedYs.shrink_to_fit();
 }
 
 int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left, int right, int targetIdx) {
@@ -49,21 +55,12 @@ int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left, int
     }
     int middle = (left + right) / 2;
     if (targetIdx < middle) {
+        if (root->left == nullptr) return root->summ;
         return root->summ + getTotalSum(root->left, left, middle, targetIdx);
     } else {
+        if (root->right == nullptr) return root->summ;
         return root->summ + getTotalSum(root->right, middle, right, targetIdx);
     }
-}
-
-void PersistentSegmentTree::buildTree(std::shared_ptr<Node> root, int left, int right) {
-    if (right - left == 1) {
-        return;
-    }
-    int middle = (left + right) / 2;
-    root->left = std::shared_ptr<Node>(new Node);
-    root->right = std::shared_ptr<Node>(new Node);
-    buildTree(root->left, left, middle);
-    buildTree(root->right, middle, right);
 }
 
 std::shared_ptr<PersistentSegmentTree::Node> PersistentSegmentTree::addWithPersistence(std::shared_ptr<Node> root, int left, int right, int rangeStart, int rangeEnd, int value) {
@@ -77,8 +74,10 @@ std::shared_ptr<PersistentSegmentTree::Node> PersistentSegmentTree::addWithPersi
     }
     int middle = (left + right) / 2;
     std::shared_ptr<Node> newRoot(new Node(*root));
-    newRoot->left = addWithPersistence(root->left, left, middle, rangeStart, rangeEnd, value);
-    newRoot->right = addWithPersistence(root->right, middle, right, rangeStart, rangeEnd, value);
+    if (newRoot->left == nullptr) newRoot->left = std::shared_ptr<Node>(new Node);
+    newRoot->left = addWithPersistence(newRoot->left, left, middle, rangeStart, rangeEnd, value);
+    if (newRoot->right == nullptr) newRoot->right = std::shared_ptr<Node>(new Node);
+    newRoot->right = addWithPersistence(newRoot->right, middle, right, rangeStart, rangeEnd, value);
     return newRoot;
 }
 
@@ -102,15 +101,14 @@ void PersistentSegmentTree::buildInternals() {
         );
     }
 
+    this->rectangles.clear();
+    this->rectangles.shrink_to_fit();
+
     std::sort(events.begin(), events.end(), [](const Event& e1, const Event& e2) {
-        if (e1.zippedXIdx != e2.zippedXIdx) {
-            return e1.zippedXIdx < e2.zippedXIdx;
-        }
-        return e1.isOpening;
+        return e1.zippedXIdx < e2.zippedXIdx;
     });
 
     std::shared_ptr<Node> root(new Node);
-    buildTree(root, 0, this->zippedYs.size());
 
     int prevZippedX = events[0].zippedXIdx;
     for (std::size_t eventIdx = 0; eventIdx < events.size(); ++eventIdx) {
