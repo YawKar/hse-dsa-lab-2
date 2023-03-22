@@ -29,8 +29,10 @@ protected:
     std::vector<int> zippedXs;
     std::vector<int> zippedYs;
     std::vector<std::shared_ptr<Node>> roots;
+    std::vector<int> zippedRootsXIdxs;
 
     int findPos(std::vector<int>& items, int target);
+    int findUpperPos(std::vector<int>& items, int target);
     void makeZippedCoordsFromRectangles();
     void buildTree(std::shared_ptr<Node> root, int left, int right);
     std::shared_ptr<Node> addWithPersistence(std::shared_ptr<Node> root, int left, int right, int rangeStart, int rangeEnd, int value);
