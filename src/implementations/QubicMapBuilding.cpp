@@ -5,7 +5,7 @@ QubicMapBuilding::QubicMapBuilding(std::vector<Rectangle>&& rectangles)
 : AbstractImplementation(std::move(rectangles)) {}
 
 int QubicMapBuilding::findPos(std::vector<int>& items, int target) {
-    return std::lower_bound(items.begin(), items.end(), target) - items.begin();
+    return std::upper_bound(items.begin(), items.end(), target) - items.begin() - 1;
 }
 
 int QubicMapBuilding::queryPoint(const Point& point)
