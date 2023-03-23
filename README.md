@@ -439,8 +439,17 @@ Each of the algorithms performs some preprocessing (except for the first algorit
 
 ## Time complexity of building the internal structure of the algorithm
 ![Time complexity of building a data structure (real scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(real%20scale).png?raw=true)
+
+As we can see above, QubicMapBuilding (2nd approach) is the slowest in the building phase. As I've mentioned in "[Second Approach: Compressed Coordinate Map Construction](#second-approach-compressed-coordinate-map-construction)" it takes `O(n^3)` to build the 2D map on compressed coordinates. Therefore it's not a surprise that it takes 48168000000 nanoseconds (48.168 seconds) to build map for `n = 5000` on my machine. As for the other two algorithms, they're incredibly faster. Because `NaiveRectangleEnumeration` (1st approach) does not have any building phase at all and `PersistentSegmentTree` builds itself in `O(n log(n))`.
+
 ![Time complexity of building a data structure (semi-logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(semi-logarithmic%20scale).png?raw=true)
+
+A graph on a semi-logarithmic scale does not give us anything new except for the visual difference between `O(1)` building phase of `NaiveRectangleEnumeration` and `O(n log(n))` of that of `PersistentSegmentTree` which is obvious even without visual reinforcement.
+
 ![Time complexity of building a data structure (logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(logarithmic%20scale).png?raw=true)
+
+Finally, a graph on a logarithmic scale gives us an interesting insight:
+- `PersistentSegmentTree`'s building phase takes more time than that of `QubicMapBuilding` until number of rectangles reaches ~150. I believe that such a difference may be conditioned by constants, which are big in case of `PersistentSegmentTree` and tiny in case of `QubicMapBuilding`. 
 
 ## Average time complexity per one query to the constructed data structure
 ![Time complexity of one query (i.e. request) (real scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(real%20scale).png?raw=true)
