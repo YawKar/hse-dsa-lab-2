@@ -67,6 +67,7 @@ Each point is defined by a pair of its coordinates: `x y`.
 Where `x` and `y` satisfy the following conditions:
 - `x, y` are integers
 - `-1e9 <= x, y <= 1e9`
+
 C++ `Point` class implementation:
 ```cpp
 class Point {
