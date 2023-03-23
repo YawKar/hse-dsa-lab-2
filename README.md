@@ -444,17 +444,29 @@ As we can see above, `QubicMapBuilding` (2nd approach) is the slowest in the bui
 
 ![Time complexity of building a data structure (semi-logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(semi-logarithmic%20scale).png?raw=true)
 
-A graph on a semi-logarithmic scale does not give us anything new except for the visual difference between `O(1)` building phase of `NaiveRectangleEnumeration` and `O(n log(n))` of that of `PersistentSegmentTree` which is obvious even without visual reinforcement.
+The graph on a semi-logarithmic scale does not give us anything new except for the visual difference between `O(1)` building phase of `NaiveRectangleEnumeration` and `O(n log(n))` of that of `PersistentSegmentTree` which is obvious even without visual reinforcement.
 
 ![Time complexity of building a data structure (logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(logarithmic%20scale).png?raw=true)
 
-Finally, a graph on a logarithmic scale gives us an interesting insight:
+Finally, the graph on the logarithmic scale gives us an interesting insight:
 - `PersistentSegmentTree`'s building phase takes more time than that of `QubicMapBuilding` until number of rectangles reaches ~150. I believe that such a difference may be conditioned by constants, which are big in case of `PersistentSegmentTree` and tiny in case of `QubicMapBuilding`. 
 
 ## Average time complexity per one query to the constructed data structure
 ![Time complexity of one query (i.e. request) (real scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(real%20scale).png?raw=true)
+
+From the graph above we can make a clear conclusion that `NaiveRectangleEnumeration` has `O(n)` time complexity for querying, whilst others' time complexities are `O(log(n))` or around it (and on that picture it actually looks like they have `O(1)` time complexity but they don't).
+
 ![Time complexity of one query (i.e. request) (semi-logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(semi-logarithmic%20scale).png?raw=true)
+
+The graph on a semi-logarithmic scale makes the difference between `QubicMapBuilding` and `PersistentSegmentTree` more distinguishable for us to see. 
+
+From that graph we can state that:
+- Constant of `PersistentSegmentTree` is higher than that of `QubicMapBuilding`, namely, twice of that of `QubicMapBuilding`. (I checked by data and it's indeed `~2`)
+
 ![Time complexity of one query (i.e. request) (logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(logarithmic%20scale).png?raw=true)
+
+Lastly, the graph on logarithmic scale appears to show us that:
+- Until the number of rectangles reaches 100, all three algorithms work equally efficient.
 
 # Installation
 ## How to setup and run
