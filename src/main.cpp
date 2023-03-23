@@ -13,7 +13,6 @@ static void BM_Building_NaiveRectangleEnumeration(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0));
-    auto points = TestCaseGenerator::generateUniformlyDistributedPoints(state.range(0), 0, state.range(0) * 20, 0, state.range(0) * 20, XSEED, YSEED);
     auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));
     state.ResumeTiming();
     
@@ -49,7 +48,6 @@ static void BM_Building_QubicMapBuilding(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0));
-    auto points = TestCaseGenerator::generateUniformlyDistributedPoints(state.range(0), 0, state.range(0) * 20, 0, state.range(0) * 20, XSEED, YSEED);
     auto algorithm = QubicMapBuilding(std::move(rectangles));
     state.ResumeTiming();
     
@@ -85,7 +83,6 @@ static void BM_Building_PersistentSegmentTree(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0));
-    auto points = TestCaseGenerator::generateUniformlyDistributedPoints(state.range(0), 0, state.range(0) * 20, 0, state.range(0) * 20, XSEED, YSEED);
     auto algorithm = PersistentSegmentTree(std::move(rectangles));
     state.ResumeTiming();
     
