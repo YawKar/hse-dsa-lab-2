@@ -12,8 +12,7 @@ int PersistentSegmentTree::findUpperPos(std::vector<int>& items, int target) {
     return std::upper_bound(items.begin(), items.end(), target) - items.begin();
 }
 
-int PersistentSegmentTree::queryPoint(const Point& point)
-{
+int PersistentSegmentTree::queryPoint(const Point& point) {
     if (point.x > this->zippedXs.back() || // `point` is to the right of the rightmost point of rectangles
         point.y > this->zippedYs.back() || // `point` is higher than the highest point of rectangles
         point.x < this->zippedXs.front() || // `point` is to the left of the leftmost point of rectangles
