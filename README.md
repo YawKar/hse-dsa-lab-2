@@ -17,7 +17,12 @@ The objective of this laboratory work is to compare the performance of multiple 
 3. [Test Case Generation](#test-case-generation)
 4. [First Approach: Naive Brute Force Algorithm](#first-approach-naive-brute-force-algorithm)
 5. [Second Approach: Compressed Coordinate Map Construction](#second-approach-compressed-coordinate-map-construction)
-6. [Third Approach: Persistent Segment Tree on Compressed Coordinates](#third-approach-persistent-segment-tree-on-compressed-coordinates)
+6. [Third Approach: Lazy Persistent Segment Tree on Compressed Coordinates](#third-approach-persistent-segment-tree-on-compressed-coordinates)
+    - [Lazy Persistent Segment Tree](#lazy-persistent-segment-tree)
+    - [Key idea: event-driven updates with preservation of the history of tree state](#key-idea-event-driven-updates-with-preservation-of-the-history-of-tree-state)
+    - [Coordinate compression](#coordinate-compression)
+    - [Events construction](#events-construction)
+    - [Querying points](#querying-points)
 7. [Benchmark Graphs, Comparison, and Thoughts](#benchmark-graphs-comparison-and-thoughts)
 8. [Installation](#installation)
 
@@ -228,9 +233,219 @@ int QubicMapBuilding::findPos(std::vector<int>& items, int target) {
 }
 ```
 
-# Third Approach: Persistent Segment Tree on Compressed Coordinates
+# Third Approach: Lazy Persistent Segment Tree on Compressed Coordinates
+The third approach requires prior knowledge of lazy persistent segment trees. After reviewing the definition and implementation of the "Lazy Persistent Segment Tree", we will be ready to proceed with the final solution.
+
+## Lazy Persistent Segment Tree
+The solution requires a lazy persistent segment tree, which stores a number in each node and allows for fast addition/subtraction of a number on random subsegments `[l; r)`.
+
+Let's start by describing the structure of a node. The node will contain three fields: a pointer to the left child, a pointer to the right child, and the accumulated sum in the node. By default, the pointers are `nullptr`, and the sum is `0`.
+```cpp
+struct Node {
+    std::shared_ptr<Node> left = nullptr;
+    std::shared_ptr<Node> right = nullptr;
+    int summ = 0;
+};
+```
+
+We implement the operation of adding/subtracting a number on a subsegment through lazy propagation until we descend to a node that corresponds to a subsegment covered by the target subsegment (`// Condition 2`). In this case, we create a new copy of the node to maintain persistence and increase/decrease the accumulated sum of the copy by the given number.
+
+If we have descended to a node that corresponds to a subsegment not covered by the target subsegment (`// Condition 1`), then in this case, we simply return a pointer to the current node, without applying any changes.
+
+Otherwise, we recursively descend into both children of the current root, creating these children if they did not exist. **This is the "laziness" of this segment tree, it builds itself only as needed**.
+
+In essence, this function returns new root node that corresponds to new 'state' of the segment tree.
+```cpp
+std::shared_ptr<PersistentSegmentTree::Node> PersistentSegmentTree::addWithPersistence(
+    std::shared_ptr<Node> root, 
+    int left, 
+    int right, 
+    int rangeStart, 
+    int rangeEnd, 
+    int value) {
+    if (left >= rangeEnd || right <= rangeStart) { // Condition 1
+        return root;
+    }
+    if (rangeStart <= left && right <= rangeEnd) { // Condition 2
+        std::shared_ptr<Node> newRoot(new Node(*root));
+        newRoot->summ += value;
+        return newRoot;
+    }
+    int middle = (left + right) / 2;
+    std::shared_ptr<Node> newRoot(new Node(*root));
+    if (newRoot->left == nullptr) newRoot->left = std::shared_ptr<Node>(new Node);
+    newRoot->left = addWithPersistence(newRoot->left, left, middle, rangeStart, rangeEnd, value);
+    if (newRoot->right == nullptr) newRoot->right = std::shared_ptr<Node>(new Node);
+    newRoot->right = addWithPersistence(newRoot->right, middle, right, rangeStart, rangeEnd, value);
+    return newRoot;
+}
+```
+
+Now, we can use root of the tree to collect information about how many subsegments cover the point `x`. In order to perform that we need to descend to the lowest hanging node that is exist and is covering the point `x`. We can do it using binary search:
+```cpp
+int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left, int right, int targetIdx) {
+    if (right - left == 1) {
+        return root->summ;
+    }
+    int middle = (left + right) / 2;
+    if (targetIdx < middle) {
+        if (root->left == nullptr) return root->summ;
+        return root->summ + getTotalSum(root->left, left, middle, targetIdx);
+    } else {
+        if (root->right == nullptr) return root->summ;
+        return root->summ + getTotalSum(root->right, middle, right, targetIdx);
+    }
+}
+```
+If the current root corresponds to a subsegment of length `1`, then we simply return the accumulated sum. Otherwise, firstly, we calculate the middle point of the `[left; right)` subsegment, and depending on the location of the `targetIdx`, we recursively dive into the left or right branch if the branch exists. If it doesn't exist, we return the root's accumulated sum.
+
+## Key idea: event-driven updates with preservation of the history of tree state
+The key idea of the solution is to update the tree for each column (each compressed x-coordinate) in the order of increasing columns from left to right, preserving the new roots of the persistent segment tree and their corresponding compressed coordinates. Then, when a query point arrives, we use binary search to find the index of the compressed coordinate along the x-axis, retrieve the tree root that was saved at the time of processing events for that x-coordinate, and perform a standard one-dimensional query along the y-coordinate, obtaining the answer in `O(log(n))`.
+
+## Coordinate compression
+Coordinate compression is implemented in a similar way as it was in the 2nd approach. The only difference is that we add not just rectangle's corners coordinates but also coordinates of the point that is 1 unit higher and 1 unit to the right of the right upper corner of the rectangle. We will need these coordinates for correct compressing of point coordinates and assignment of events' coordinates as well as for one-dimensional (along the y-coordinate) querying on segment tree.
+```cpp
+void PersistentSegmentTree::makeZippedCoordsFromRectangles() {
+    for (const auto& rect : this->rectangles) {
+        this->zippedXs.push_back(rect.leftDown.x);
+        this->zippedXs.push_back(rect.rightUp.x);
+        this->zippedXs.push_back(rect.rightUp.x + 1); // We add 
+    }
+    
+    std::sort(this->zippedXs.begin(), this->zippedXs.end());
+    this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
+    this->zippedXs.shrink_to_fit();
+
+    for (const auto& rect : this->rectangles) {
+        this->zippedYs.push_back(rect.leftDown.y);
+        this->zippedYs.push_back(rect.rightUp.y);
+        this->zippedYs.push_back(rect.rightUp.y + 1);
+    }
+
+    std::sort(this->zippedYs.begin(), this->zippedYs.end());
+    this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
+    this->zippedYs.shrink_to_fit();
+}
+```
+
+## Events construction
+Every rectangle has 4 sides. We need to create a sequence of sorted events each of which represents left or right side of a rectangle.
+
+Let's consider the structure of an event:
+```cpp
+struct Event {
+    int zippedXIdx;
+    bool isOpening;
+    int zippedYIdxStart;
+    int zippedYIdxEnd;
+    Event(int zippedXIdx_, bool isOpening_, int zippedYIdxStart_, int zippedYIdxEnd_) 
+    : zippedXIdx(zippedXIdx_), isOpening(isOpening_), zippedYIdxStart(zippedYIdxStart_), zippedYIdxEnd(zippedYIdxEnd_) {}
+};
+```
+There `zippedXIdx` is the compressed x-coordinate of the left or right side of some rectangle. `isOpening` is a marker representing whether it is a left or right side (left if `true`, `false` otherwise, because we process events from left to right along the x-axis and the left side 'opens' the rectangle, whereas the right side `closes` it). `zippedYIdxStart` is the compressed y-coordinate of the left bottom corner of the rectangle, and also it is the beginning of the subsegment that corresponds to that rectangle's side. `zippedYIdxEnd` is the compressed y-coordinate of the point 1 unit higher and 1 unit to the right of the right top corner of the rectangle, and also it is the exclusive end of the subsegment that corresponds to that rectangle's side.
+
+Now checkout the implementation of events creation:
+```cpp
+void PersistentSegmentTree::buildInternals() {
+    makeZippedCoordsFromRectangles(); // Compresse rectangles' coordinates and save compressed into `this->zippedXs` and `this->zippedYs`
+
+    std::vector<Event> events;                      // Place where we will store our events.
+    events.reserve(2 * this->rectangles.size());    // Reserve 2 * 'number of rectangles' memory so the vector won't need to reallocate memory.
+
+    for (const auto& rect : this->rectangles) {
+        events.emplace_back(                            // Opening event:
+            findPos(this->zippedXs, rect.leftDown.x),   // zippedX index,
+            1,                                          // isOpening = true,
+            findPos(this->zippedYs, rect.leftDown.y),   // zippedYRangeStart: beginning of the subsegment on which we should add 1,
+            findPos(this->zippedYs, rect.rightUp.y + 1) // zippedYRangeEnd: if subsegment is [l; r], it equals to 'r + 1',
+        );                                              // so we can perform addition on [l; r + 1).
+        events.emplace_back(                            // Closing event:
+            findPos(this->zippedXs, rect.rightUp.x + 1),// zippedX index,
+            0,                                          // isOpening = false,
+            findPos(this->zippedYs, rect.leftDown.y),   // zippedYRangeStart: beginning of the subsegment on which we should subtract 1,
+            findPos(this->zippedYs, rect.rightUp.y + 1) // zippedYRangeEnd: if subsegment is [l; r], it equals to 'r + 1',
+        );                                              // so we can perform subtraction on [l; r + 1).
+    }
+
+    this->rectangles.clear();           // We clear the vector containing rectangles
+    this->rectangles.shrink_to_fit();   // and shrink its capacity so it frees the allocated memory. 
+                                        // If you don't do it, you may face MLE (Memory Limit Exceeded) status. Or may not, I didn't check it.
+
+    std::sort(events.begin(), events.end(), [](const Event& e1, const Event& e2) {  // Sort events in ascending order according to their
+        return e1.zippedXIdx < e2.zippedXIdx;                                       // zipped x-coordinates.
+    });
+
+    std::shared_ptr<Node> root(new Node);   // Create empty (for a while) root
+
+    int prevZippedX = events[0].zippedXIdx; // Remember the zipped x-coordinate of the first event.
+    for (std::size_t eventIdx = 0; eventIdx < events.size(); ++eventIdx) {  // Iterate over all events.
+        if (events[eventIdx].zippedXIdx != prevZippedX) {   // If current event is not on the same zipped x-coordinate,
+            this->roots.push_back(root);                    // preserve current root
+            this->zippedRootsXIdxs.push_back(prevZippedX);  // and the corresponding zipped x-coordinate.
+            prevZippedX = events[eventIdx].zippedXIdx;      // Update current 'working on' zipped x-coordinate.
+        }
+        root = addWithPersistence(                                            // Perform the 'event' (obtaining new root because of persistence)
+            root,                                                             // on the 'root' root
+            0, this->zippedYs.size(),                                         // with the segment tree's leftmost index and rightmost (exclusive)
+            events[eventIdx].zippedYIdxStart, events[eventIdx].zippedYIdxEnd, // on subsegment [zippedYIdxStart, zippedYIdxEnd)
+            events[eventIdx].isOpening ? 1 : -1                               // adding/subtracting 1.
+            );
+    }
+    this->zippedRootsXIdxs.push_back(prevZippedX);  // Save the last root's zipped x-coordinate.
+    this->roots.push_back(root);                    // Preserve the last updated root (Invariant is: all of this root's nodes contain zero as their sum).
+}
+```
+
+After that we will have a set of persisted roots of the segment tree each with the corresponding compressed x-coordinate. It's time to review the final method that will query points in `O(log(N))`.
+
+## Querying points
+Initially, we need to check whether the point is even within the working area, if it isn't we can simply return 0 as it guarantees that the point is out of bounds of any rectangle.
+
+If the point is within the working area, we find the corresponding compressed coordinates, which will be the maximum coordinates that are also less than or equal to those of the point. Then, in the array of saved compressed x-coordinates of the roots of the persistent segment tree, we find the root with the maximum index of compressed x-coordinate that is also less than or equal to that of the compressed input point. Once we obtain the root, we simply perform a one-dimensional query on it to obtain the accumulated sum over all subsegments that include the compressed y-coordinate of the point.
+```cpp
+int PersistentSegmentTree::queryPoint(const Point& point) {
+    if (point.x > this->zippedXs.back() || // `point` is to the right of the rightmost point of rectangles
+        point.y > this->zippedYs.back() || // `point` is higher than the highest point of rectangles
+        point.x < this->zippedXs.front() || // `point` is to the left of the leftmost point of rectangles
+        point.y < this->zippedYs.front() // `point` is lower than the lowest point of rectangles
+        ) {
+        return 0; // `point` is out of the bounds
+    }
+    int zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1; // Find compressed x-coordinate of the point.
+    int zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1; // Find compressed y-coordinate of the point.
+    // Find the required root:
+    std::shared_ptr<Node> targetRoot = this->roots[findUpperPos(this->zippedRootsXIdxs, zippedXIdx) - 1];
+    // Return the result of query on the 'targetRoot' (one-dimensional query on a rectangle's side)
+    return getTotalSum(targetRoot, 0, this->zippedYs.size(), zippedYIdx);
+}
+```
+Implementation of the util method `findUpperPos(..)` that performs search for compressed indexes that are `>`:
+```cpp
+int PersistentSegmentTree::findUpperPos(std::vector<int>& items, int target) {
+    return std::upper_bound(items.begin(), items.end(), target) - items.begin();
+}
+```
+Implementation of the util method `findPos(..)` that performs search for compressed indexes that are `>=`:
+```cpp
+int PersistentSegmentTree::findPos(std::vector<int>& items, int target) {
+    return std::lower_bound(items.begin(), items.end(), target) - items.begin();
+}
+```
 
 # Benchmark Graphs, Comparison, and Thoughts
+Each of the algorithms performs some preprocessing (except for the first algorithm) with its own asymptotic complexity. At the same time, each of the algorithms responds to queries in its own way. Therefore, I decided to divide the measurements into:
+- Time complexity of building the internal structure of the algorithm
+- Average time complexity per one query to the constructed data structure
+
+## Time complexity of building the internal structure of the algorithm
+![Time complexity of building a data structure (real scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(real%20scale).png?raw=true)
+![Time complexity of building a data structure (semi-logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(semi-logarithmic%20scale).png?raw=true)
+![Time complexity of building a data structure (logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20building%20a%20data%20structure%20(logarithmic%20scale).png?raw=true)
+
+## Average time complexity per one query to the constructed data structure
+![Time complexity of one query (i.e. request) (real scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(real%20scale).png?raw=true)
+![Time complexity of one query (i.e. request) (semi-logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(semi-logarithmic%20scale).png?raw=true)
+![Time complexity of one query (i.e. request) (logarithmic scale).png](https://github.com/YawKar/hse-dsa-lab-2/blob/main/docs/png/Time%20complexity%20of%20one%20query%20(i.e.%20request)%20(logarithmic%20scale).png?raw=true)
 
 # Installation
 ## How to setup and run
