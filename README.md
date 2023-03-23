@@ -206,6 +206,27 @@ void QubicMapBuilding::buildInternals() {
     }
 }
 ```
+Implementation of query:
+```cpp
+int QubicMapBuilding::queryPoint(const Point& point)
+{
+    Point zipped(findPos(this->zippedXs, point.x), findPos(this->zippedYs, point.y));
+    if (zipped.x == this->zippedXs.size() || // `point` is to the right of the rightmost point of rectangles
+        zipped.y == this->zippedYs.size() || // `point` is higher than the highest point of rectangles
+        (zipped.x == 0 && point.x < this->zippedXs[0]) || // `point` is to the left of the leftmost point of rectangles
+        (zipped.y == 0 && point.y < this->zippedYs[0]) // `point` is lower than the lowest point of rectangles
+        ) {
+        return 0; // `point` is out of the bounds
+    }
+    return this->map[zipped.x][zipped.y];
+}
+```
+Implementation of the util method `findPos(..)` that performs search for compressed indexes:
+```cpp
+int QubicMapBuilding::findPos(std::vector<int>& items, int target) {
+    return std::upper_bound(items.begin(), items.end(), target) - items.begin() - 1;
+}
+```
 
 # Third Approach: Persistent Segment Tree on Compressed Coordinates
 
