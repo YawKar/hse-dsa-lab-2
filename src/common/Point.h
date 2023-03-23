@@ -6,8 +6,7 @@ public:
     int x;
     int y;
 
-    Point() : x(0), y(0) {}
-    Point(int x_, int y_) : x(x_), y(y_) {}
+    Point(int x_ = 0, int y_ = 0) : x(x_), y(y_) {}
 };
 
 #endif // POINT_HPP
