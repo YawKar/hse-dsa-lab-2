@@ -309,7 +309,7 @@ void PersistentSegmentTree::makeZippedCoordsFromRectangles() {
     for (const auto& rect : this->rectangles) {
         this->zippedXs.push_back(rect.leftDown.x);
         this->zippedXs.push_back(rect.rightUp.x);
-        this->zippedXs.push_back(rect.rightUp.x + 1); // We add 
+        this->zippedXs.push_back(rect.rightUp.x + 1);
     }
     
     std::sort(this->zippedXs.begin(), this->zippedXs.end());
