@@ -24,7 +24,10 @@ The objective of this laboratory work is to compare the performance of multiple 
     - [Events construction](#events-construction)
     - [Querying points](#querying-points)
 7. [Benchmark Graphs, Comparison, and Thoughts](#benchmark-graphs-comparison-and-thoughts)
-8. [Installation](#installation)
+8. [Benchmarks](#benchmarks)
+9. [Run it yourself!](#run-it-yourself)
+    - [Installation](#installation)
+        - [How to install conan](#how-to-install-conan)
 
 # Problem Statement and Constraints
 ## Problem statement
@@ -468,8 +471,44 @@ From that graph we can state that:
 Lastly, the graph on logarithmic scale appears to show us that:
 - Until the number of rectangles reaches 100, all three algorithms work equally efficient.
 
-# Installation
-## How to setup and run
+# Benchmarks
+All benchmarks are in `main.cpp` file, you can go and check them manually or read this short description.
+
+Base structure of all benchmarks that measure building phase looks like that:
+```cpp
+static void BM_Building_NaiveRectangleEnumeration(benchmark::State& state) {
+  for (auto _ : state) {    // Starts the timer for each iteration (i.e. one distinct measurement)
+    state.PauseTiming();    // Pause timing for test generation process to prevent contamination of results
+    auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0)); // Generate rectangles for the test
+    auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));  // Move input data inside the algorithm preset (without starting building the internals)
+    state.ResumeTiming();   // Resume timing to count the `buildInternals()` time consumption
+    
+    algorithm.buildInternals(); // The actual `building phase` being measured
+  }
+}
+```
+Base structure of all benchmarks that measure average per query complexity looks like that:
+```cpp
+static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State& state) {
+  auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0));   // Generate rectangles for the test
+  auto points = TestCaseGenerator::generateUniformlyDistributedPoints(state.range(0), 0, state.range(0) * 20, 0, state.range(0) * 20, XSEED, YSEED);    // Generate points for the test
+  int currentIdx = 0;   // Set the current point index (we will measure average query time complexity looping through 'points')
+  auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));    // Move input data inside the algorithm preset (without starting building the internals)
+  algorithm.buildInternals();   // Build the internals
+
+  for (auto _ : state) {    // Starts the timer for each iteration (i.e. one distinct measurement)
+    algorithm.queryPoint(points[currentIdx++]); // Query the `currentIdx`th point
+    state.PauseTiming();    // Stop measurements to prevent %= from creating noises in results (probably can be removed)
+    currentIdx %= points.size();
+    state.ResumeTiming();   // Resume measurements
+  }
+}
+```
+
+# Run it yourself!
+
+## Installation
+### How to install conan
 1. Install conan 2.0
 2. [Optional] Create conan profile if you haven't yet: `conan profile detect --force`. This will create new default profile for conan in your system.
 3. Install CMake of version not less than the one that is specified in CMakeLists.txt
