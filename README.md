@@ -27,7 +27,13 @@ The objective of this laboratory work is to compare the performance of multiple 
 8. [Benchmarks](#benchmarks)
 9. [Run it yourself!](#run-it-yourself)
     - [Installation](#installation)
-        - [How to install conan](#how-to-install-conan)
+        - [How to install CMake](#how-to-install-cmake)
+        - [How to install Conan](#how-to-install-conan)
+        - [How to install dependencies via Conan](#how-to-install-dependencies-via-conan)
+    - [Running](#running)
+        - [Initial setup and generation of toolchain files](#initial-setup-and-generation-of-toolchain-files)
+        - [Building and running the executable](#building-and-running-the-executable)
+        - [Supported command line arguments](#supported-command-line-arguments)
 
 # Problem Statement and Constraints
 ## Problem statement
@@ -472,7 +478,7 @@ Lastly, the graph on logarithmic scale appears to show us that:
 - Until the number of rectangles reaches 100, all three algorithms work equally efficient.
 
 # Benchmarks
-All benchmarks are in `main.cpp` file, you can go and check them manually or read this short description.
+All benchmarks are in `main.cpp` file, you can go and check them out manually or read this short description.
 
 Base structure of all benchmarks that measure building phase looks like that:
 ```cpp
@@ -506,17 +512,49 @@ static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State& state) {
 ```
 
 # Run it yourself!
-
 ## Installation
-### How to install conan
-1. Install conan 2.0
-2. [Optional] Create conan profile if you haven't yet: `conan profile detect --force`. This will create new default profile for conan in your system.
-3. Install CMake of version not less than the one that is specified in CMakeLists.txt
-3. `cd` to the root folder of the project
-4. `conan install . --output-folder=build --build=missing`
-5. `cd build`
-6. `cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release`
-7. `cmake --build .`
-8. `./conan_template`
+### How to install CMake
+1. You should check out [official ways to insall CMake, depending on your platform](https://cmake.org/install/)
+2. After you installed it, check whether it works with \``cmake --version`\`, it should print something like \``cmake version x.xx.x`\` and etc
 
-Now make a tea and eat some cookies. You're awesome.
+### How to install Conan
+1. Check out [official ways to install Conan in your system](https://docs.conan.io/2/installation.html)
+2. Personally, I prefer \``pip install conan`\`
+3. After you installed `conan`, check whether it works with \``conan --version`\` it should print \``Conan version x.x.x`\` or something like that
+4. Generate default profile for conan using: \``conan profile detect --force`\` (it will automatically find your system's properties and etc)
+
+### How to install dependencies via Conan
+1. Create conan profile if you didn't: \``conan profile detect --force`\`. This will create new default profile for conan in your system (or overwrite the one that was generated before).
+2. \``cd`\` to the root folder of the project
+3. \``conan install . --output-folder=build --build=missing`\`
+4. Congratulations! You've just installed all necessary dependencies for the project!
+
+## Running
+### Initial setup and generation of toolchain files
+1. \``cd`\` to the root folder of the project
+2. \``conan install . --output-folder=build --build=missing`\`
+3. \``cd build`\`
+4. \``cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release`\`
+### Building and running the executable
+1. \``cd`\` to the root folder of the project
+2. \``cd build`\`
+3. \``cmake --build .`\`
+4. \``./lab_benchmarks`\`
+5. Congratulations! You've just built and run benchmarks on your own machine!
+
+### Supported command line arguments
+Thanks to the [Google Benchmark library](https://github.com/google/benchmark), there a whole bunch of useful options that one can use to specify the benchmarking process. You can see the full list on [official user guide](https://google.github.io/benchmark/user_guide.html).
+
+I frequently used these:
+- \``./lab_benchmarks --benchmark_filter=<regex>`\` 
+    
+    Run benchmarks with names satisfying the given `regex`. 
+    
+    Example: \``--benchmark_filter=.*Building.*QubicMapBuilding`\` (will run only building phase benchmarks that use `QubicMapBuilding` algorithm)
+- \``./lab_benchmarks --benchmark_out=<filename>`\`
+    
+    Write benchmark results to a file. 
+    
+    Example: \``--benchmark_out=results.txt`\`
+
+Wow! You're reading this! Make a tea and eat some cookies! You're truly awesome!
