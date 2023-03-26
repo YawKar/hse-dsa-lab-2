@@ -191,10 +191,12 @@ Implementation of coordinate compression and map building:
 ```cpp
 void QubicMapBuilding::buildInternals() {
     for (const auto& rect : this->rectangles) {
-        this->zippedXs.push_back(rect.leftDown.x);  // Here we accumulate all x-es
-        this->zippedXs.push_back(rect.rightUp.x);   // 
-        this->zippedYs.push_back(rect.leftDown.y);  // and y-es of both rectangle corners
-        this->zippedYs.push_back(rect.rightUp.y);
+        this->zippedXs.push_back(rect.leftDown.x);      // Here we accumulate all x-es
+        this->zippedXs.push_back(rect.rightUp.x);       //
+        this->zippedXs.push_back(rect.rightUp.x + 1);   // (additional coordinates for correct binary search in findPos)
+        this->zippedYs.push_back(rect.leftDown.y);      // and y-es of both rectangle corners
+        this->zippedYs.push_back(rect.rightUp.y);       //
+        this->zippedYs.push_back(rect.rightUp.y + 1);   // (additional coordinates for correct binary search in findPos)
     }
     
     // Next, we need to sort these coordinates in order to effectively delete duplicates
