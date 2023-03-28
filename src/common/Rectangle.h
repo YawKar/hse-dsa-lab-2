@@ -3,12 +3,14 @@
 #include "Point.h"
 
 class Rectangle {
-public:
-    Point leftDown;
-    Point rightUp;
+ public:
+  Point leftDown;
+  Point rightUp;
 
-    Rectangle(int x1, int y1, int x2, int y2) : leftDown(x1, y1), rightUp(x2, y2) {}
-    Rectangle(const Point& leftDown_, const Point& rightUp_) : leftDown(leftDown_), rightUp(rightUp_) {}
+  Rectangle(int x1, int y1, int x2, int y2)
+      : leftDown(x1, y1), rightUp(x2, y2) {}
+  Rectangle(const Point& leftDown_, const Point& rightUp_)
+      : leftDown(leftDown_), rightUp(rightUp_) {}
 };
 
-#endif // RECTANGLE_HPP
+#endif  // RECTANGLE_HPP

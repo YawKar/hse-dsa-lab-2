@@ -1,21 +1,17 @@
 #ifndef TEST_CASE_GENERATOR_HPP
 #define TEST_CASE_GENERATOR_HPP
 
-#include "Rectangle.h"
-#include <vector>
 #include <random>
+#include <vector>
+
+#include "Rectangle.h"
 
 class TestCaseGenerator {
-public:
-    static std::vector<Rectangle> generateRecommendedRectangles(int rectangles);
-    static std::vector<Point> generateUniformlyDistributedPoints(
-        int numberOfPoints, 
-        int minX, 
-        int maxX, 
-        int minY, 
-        int maxY, 
-        int xSeed = std::random_device()(), 
-        int ySeed = std::random_device()());
+ public:
+  static std::vector<Rectangle> generateRecommendedRectangles(int rectangles);
+  static std::vector<Point> generateUniformlyDistributedPoints(
+      int numberOfPoints, int minX, int maxX, int minY, int maxY,
+      int xSeed = std::random_device()(), int ySeed = std::random_device()());
 };
 
-#endif // TEST_CASE_GENERATOR_HPP
+#endif  // TEST_CASE_GENERATOR_HPP
