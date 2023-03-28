@@ -76,7 +76,7 @@ void PersistentSegmentTree::buildInternals() {
   makeZippedCoordsFromRectangles();
 
   std::vector<Event> events;
-  events.reserve(this->rectangles.size());
+  events.reserve(2 * this->rectangles.size());
   for (const auto &rect : this->rectangles) {
     events.emplace_back(findPos(this->zippedXs, rect.leftDown.x), 1, findPos(this->zippedYs, rect.leftDown.y),
                         findPos(this->zippedYs, rect.rightUp.y + 1));
@@ -93,14 +93,14 @@ void PersistentSegmentTree::buildInternals() {
   std::shared_ptr<Node> root(new Node);
 
   std::size_t prevZippedX = events[0].zippedXIdx;
-  for (std::size_t eventIdx = 0; eventIdx < events.size(); ++eventIdx) {
-    if (events[eventIdx].zippedXIdx != prevZippedX) {
+  for (const auto &event : events) {
+    if (event.zippedXIdx != prevZippedX) {
       this->roots.push_back(root);
       this->zippedRootsXIdxs.push_back(prevZippedX);
-      prevZippedX = events[eventIdx].zippedXIdx;
+      prevZippedX = event.zippedXIdx;
     }
-    root = addWithPersistence(root, 0, this->zippedYs.size(), events[eventIdx].zippedYIdxStart,
-                              events[eventIdx].zippedYIdxEnd, events[eventIdx].isOpening ? 1 : -1);
+    root = addWithPersistence(root, 0, this->zippedYs.size(), event.zippedYIdxStart, event.zippedYIdxEnd,
+                              event.isOpening ? 1 : -1);
   }
   this->zippedRootsXIdxs.push_back(prevZippedX);
   this->roots.push_back(root);
