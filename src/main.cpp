@@ -10,11 +10,21 @@
 const int XSEED = 42;
 const int YSEED = 13;
 
+static std::vector<Rectangle> getRectangles(long numberOfRectangles) {
+  return TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(numberOfRectangles));
+}
+
+static std::vector<Point> getPoints(long numberOfPoints) {
+  return TestCaseGenerator::generateUniformlyDistributedPoints(static_cast<int>(numberOfPoints), 0,
+                                                               static_cast<int>(numberOfPoints) * 20, 0,
+                                                               static_cast<int>(numberOfPoints) * 20, XSEED, YSEED);
+}
+
 // NaiveRectangleEnumeration
 static void BM_Building_NaiveRectangleEnumeration(benchmark::State &state) {
   for (auto _ : state) {
     state.PauseTiming();
-    auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
+    auto rectangles = getRectangles(state.range(0));
     auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));
     state.ResumeTiming();
 
@@ -36,10 +46,8 @@ BENCHMARK(BM_Building_NaiveRectangleEnumeration)
     ->Iterations(10000);
 
 static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State &state) {
-  auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
-  auto points = TestCaseGenerator::generateUniformlyDistributedPoints(
-      static_cast<int>(state.range(0)), 0, static_cast<int>(state.range(0)) * 20, 0,
-      static_cast<int>(state.range(0)) * 20, XSEED, YSEED);
+  auto rectangles = getRectangles(state.range(0));
+  auto points = getPoints(state.range(0));
   std::size_t currentIdx = 0;
   auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));
   algorithm.buildInternals();
@@ -69,7 +77,7 @@ BENCHMARK(BM_PerRequest_NaiveRectangleEnumeration)
 static void BM_Building_QubicMapBuilding(benchmark::State &state) {
   for (auto _ : state) {
     state.PauseTiming();
-    auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
+    auto rectangles = getRectangles(state.range(0));
     auto algorithm = QubicMapBuilding(std::move(rectangles));
     state.ResumeTiming();
 
@@ -82,10 +90,8 @@ BENCHMARK(BM_Building_QubicMapBuilding)->ArgName("Rectangles&Points")->DenseRang
 BENCHMARK(BM_Building_QubicMapBuilding)->ArgName("Rectangles&Points")->DenseRange(2000, 5000, 1000);
 
 static void BM_PerRequest_QubicMapBuilding(benchmark::State &state) {
-  auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
-  auto points = TestCaseGenerator::generateUniformlyDistributedPoints(
-      static_cast<int>(state.range(0)), 0, static_cast<int>(state.range(0)) * 20, 0,
-      static_cast<int>(state.range(0)) * 20, XSEED, YSEED);
+  auto rectangles = getRectangles(state.range(0));
+  auto points = getPoints(state.range(0));
   std::size_t currentIdx = 0;
   auto algorithm = QubicMapBuilding(std::move(rectangles));
   algorithm.buildInternals();
@@ -106,7 +112,7 @@ BENCHMARK(BM_PerRequest_QubicMapBuilding)->ArgName("Rectangles&Points")->DenseRa
 static void BM_Building_PersistentSegmentTree(benchmark::State &state) {
   for (auto _ : state) {
     state.PauseTiming();
-    auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
+    auto rectangles = getRectangles(state.range(0));
     auto algorithm = PersistentSegmentTree(std::move(rectangles));
     state.ResumeTiming();
 
@@ -119,10 +125,8 @@ BENCHMARK(BM_Building_PersistentSegmentTree)->ArgName("Rectangles&Points")->Dens
 BENCHMARK(BM_Building_PersistentSegmentTree)->ArgName("Rectangles&Points")->DenseRange(10000, 100000, 10000);
 
 static void BM_PerRequest_PersistentSegmentTree(benchmark::State &state) {
-  auto rectangles = TestCaseGenerator::generateRecommendedRectangles(static_cast<int>(state.range(0)));
-  auto points = TestCaseGenerator::generateUniformlyDistributedPoints(
-      static_cast<int>(state.range(0)), 0, static_cast<int>(state.range(0)) * 20, 0,
-      static_cast<int>(state.range(0)) * 20, XSEED, YSEED);
+  auto rectangles = getRectangles(state.range(0));
+  auto points = getPoints(state.range(0));
   std::size_t currentIdx = 0;
   auto algorithm = PersistentSegmentTree(std::move(rectangles));
   algorithm.buildInternals();
