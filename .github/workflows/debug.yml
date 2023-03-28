@@ -1,0 +1,34 @@
+name: CMake(Debug)
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - uses: actions/checkout@v3.5.0
+      - name: Get Conan
+        id: conan
+        uses: turtlebrowser/get-conan@main
+      - name: Conan version
+        run: echo "${{ steps.conan.outputs.version }}"
+      - name: Create default profile
+        run: conan profile detect --force
+      - name: Install dependencies
+        run: conan install . --output-folder=${{ github.workspace }}/build --build=missing -s build_type=${{ env.BUILD_TYPE }} -s compiler=gcc -s compiler.libcxx=libstdc++11 -s compiler.version=11 -s compiler.cppstd=gnu17
+      - name: CMake configure
+        run: cd ${{ github.workspace }}/build && cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+      - name: CMake build
+        run: cd ${{ github.workspace }}/build && cmake --build . --config ${{ env.BUILD_TYPE }}
+        
+
