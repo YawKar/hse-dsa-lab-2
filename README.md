@@ -52,12 +52,12 @@ Where `x1`, `y1`, `x2`, `y2` satisfy the following conditions:
 C++ `Rectangle` class implementation:
 ```cpp
 class Rectangle {
-public:
-    Point leftDown;
-    Point rightUp;
+ public:
+  Point leftDown;
+  Point rightUp;
 
-    Rectangle(int x1, int y1, int x2, int y2) : leftDown(x1, y1), rightUp(x2, y2) {}
-    Rectangle(const Point& leftDown_, const Point& rightUp_) : leftDown(leftDown_), rightUp(rightUp_) {}
+  Rectangle(long x1, long y1, long x2, long y2) : leftDown(x1, y1), rightUp(x2, y2) {}
+  Rectangle(const Point& leftDown_, const Point& rightUp_) : leftDown(leftDown_), rightUp(rightUp_) {}
 };
 ```
 
@@ -71,11 +71,11 @@ Where `x` and `y` satisfy the following conditions:
 C++ `Point` class implementation:
 ```cpp
 class Point {
-public:
-    int x;
-    int y;
+ public:
+  long x;
+  long y;
 
-    Point(int x_ = 0, int y_ = 0) : x(x_), y(y_) {}
+  Point(long x_ = 0, long y_ = 0) : x(x_), y(y_) {}
 };
 ```
 
@@ -120,43 +120,39 @@ As for generating points, it was advised to generate them somehow uniformly acro
 I decided to encapsulate test generation logic inside of the `TestCaseGenerator` class:
 ```cpp
 class TestCaseGenerator {
-public:
-    static std::vector<Rectangle> generateRecommendedRectangles(int rectangles);
-    static std::vector<Point> generateUniformlyDistributedPoints(
-        int numberOfPoints, 
-        int minX, 
-        int maxX, 
-        int minY, 
-        int maxY, 
-        int xSeed = std::random_device()(), 
-        int ySeed = std::random_device()());
+ public:
+  static std::vector<Rectangle> generateRecommendedRectangles(int rectangles);
+  static std::vector<Point> generateUniformlyDistributedPoints(int numberOfPoints, int minX, int maxX, int minY,
+                                                               int maxY, int xSeed = std::random_device()(),
+                                                               int ySeed = std::random_device()());
 };
 ```
 Implementation of `generateRecommendedRectangles`:
 ```cpp
 std::vector<Rectangle> TestCaseGenerator::generateRecommendedRectangles(int numberOfRectangles) {
-    std::vector<Rectangle> rects;
-    rects.reserve(numberOfRectangles);
-    for (int i = 0; i < numberOfRectangles; ++i) {
-        rects.emplace_back(10 * i, 10 * i, 10 * (2 * numberOfRectangles - i), 10 * (2 * numberOfRectangles - i));
-    }
-    return rects;
+  std::vector<Rectangle> rects;
+  rects.reserve(numberOfRectangles);
+  for (int i = 0; i < numberOfRectangles; ++i) {
+    rects.emplace_back(10 * i, 10 * i, 10 * (2 * numberOfRectangles - i), 10 * (2 * numberOfRectangles - i));
+  }
+  return rects;
 }
 ```
 Implementation of `generateUniformlyDistributedPoints`:
 ```cpp
-std::vector<Point> TestCaseGenerator::generateUniformlyDistributedPoints(int numberOfPoints, int minX, int maxX, int minY, int maxY, int xSeed, int ySeed) {
-    std::mt19937 xEngine(xSeed);
-    std::mt19937 yEngine(ySeed);
-    std::uniform_int_distribution<int> xDist(minX, maxX);
-    std::uniform_int_distribution<int> yDist(minY, maxY);
+std::vector<Point> TestCaseGenerator::generateUniformlyDistributedPoints(int numberOfPoints, int minX, int maxX,
+                                                                         int minY, int maxY, int xSeed, int ySeed) {
+  std::mt19937 xEngine(xSeed);
+  std::mt19937 yEngine(ySeed);
+  std::uniform_int_distribution<int> xDist(minX, maxX);
+  std::uniform_int_distribution<int> yDist(minY, maxY);
 
-    std::vector<Point> points;
-    points.reserve(numberOfPoints);
-    for (int i = 0; i < numberOfPoints; ++i) {
-        points.emplace_back(xDist(xEngine), yDist(yEngine));
-    }
-    return points;
+  std::vector<Point> points;
+  points.reserve(numberOfPoints);
+  for (int i = 0; i < numberOfPoints; ++i) {
+    points.emplace_back(xDist(xEngine), yDist(yEngine));
+  }
+  return points;
 }
 ```
 
@@ -169,16 +165,15 @@ void NaiveRectangleEnumeration::buildInternals() {}
 ```
 The brute force implementation of query:
 ```cpp
-int NaiveRectangleEnumeration::queryPoint(const Point& point)
-{
-    int answer = 0;
-    for (const auto& rectangle : this->rectangles) {
-        if (rectangle.leftDown.x <= point.x && point.x <= rectangle.rightUp.x &&
-            rectangle.leftDown.y <= point.y && point.y <= rectangle.rightUp.y) {
-                ++answer;
-        }
+int NaiveRectangleEnumeration::queryPoint(const Point &point) {
+  int answer = 0;
+  for (const auto &rectangle : this->rectangles) {
+    if (rectangle.leftDown.x <= point.x && point.x <= rectangle.rightUp.x && rectangle.leftDown.y <= point.y &&
+        point.y <= rectangle.rightUp.y) {
+      ++answer;
     }
-    return answer;
+  }
+  return answer;
 }
 ```
 
@@ -190,58 +185,62 @@ To find the answer for a given point `(x, y)`, we will search for the indexes of
 Implementation of coordinate compression and map building:
 ```cpp
 void QubicMapBuilding::buildInternals() {
-    for (const auto& rect : this->rectangles) {
-        this->zippedXs.push_back(rect.leftDown.x);      // Here we accumulate all x-es
-        this->zippedXs.push_back(rect.rightUp.x);       //
-        this->zippedXs.push_back(rect.rightUp.x + 1);   // (additional coordinates for correct binary search in findPos)
-        this->zippedYs.push_back(rect.leftDown.y);      // and y-es of both rectangle corners
-        this->zippedYs.push_back(rect.rightUp.y);       //
-        this->zippedYs.push_back(rect.rightUp.y + 1);   // (additional coordinates for correct binary search in findPos)
-    }
-    
-    // Next, we need to sort these coordinates in order to effectively delete duplicates
-    std::sort(this->zippedXs.begin(), this->zippedXs.end());
-    std::sort(this->zippedYs.begin(), this->zippedYs.end());
-    this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
-    this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
+  // Here we accumulate all x-coords and y-coords. 
+  // Moreover, for each rectangle we also accumulate coords of the point that is 1 unit higher 
+  // and 1 unit to the right than the rightmost upper point of the rectangle. 
+  for (const auto &rect : this->rectangles) {
+    this->zippedXs.push_back(rect.leftDown.x);
+    this->zippedXs.push_back(rect.rightUp.x);
+    this->zippedXs.push_back(rect.rightUp.x + 1);
+    this->zippedYs.push_back(rect.leftDown.y);
+    this->zippedYs.push_back(rect.rightUp.y);
+    this->zippedYs.push_back(rect.rightUp.y + 1);
+  }
 
-    // Allocate two-dimensional map with '0' as default value
-    this->map.resize(zippedXs.size());
-    for (std::size_t i = 0; i < zippedXs.size(); ++i) {
-        this->map[i].resize(this->zippedYs.size());
-    }
+  // Next, we need to sort these coordinates in order to effectively delete duplicates
+  std::sort(this->zippedXs.begin(), this->zippedXs.end());
+  std::sort(this->zippedYs.begin(), this->zippedYs.end());
+  this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
+  this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
 
-    // This takes O(n^3) operations to build the final "height map".
-    for (const auto& rect : this->rectangles) {
-        Point zippedLeftDown(findPos(this->zippedXs, rect.leftDown.x), findPos(this->zippedYs, rect.leftDown.y));
-        Point zippedRightUp(findPos(this->zippedXs, rect.rightUp.x), findPos(this->zippedYs, rect.rightUp.y));
-        for (int xIdx = zippedLeftDown.x; xIdx < zippedRightUp.x + 1; ++xIdx) {
-            for (int yIdx = zippedLeftDown.y; yIdx < zippedRightUp.y + 1; ++yIdx) {
-                ++this->map[xIdx][yIdx];
-            }
-        }
+  // Allocate two-dimensional map with '0' as default value
+  this->map.resize(zippedXs.size());
+  for (std::size_t i = 0; i < zippedXs.size(); ++i) {
+    this->map[i].resize(this->zippedYs.size());
+  }
+
+  // This takes O(n^3) operations to build the final "height map".
+  for (const auto &rect : this->rectangles) {
+    Point zippedLeftDown(findPos(this->zippedXs, rect.leftDown.x), findPos(this->zippedYs, rect.leftDown.y));
+    Point zippedRightUp(findPos(this->zippedXs, rect.rightUp.x), findPos(this->zippedYs, rect.rightUp.y));
+    for (long xIdx = zippedLeftDown.x; xIdx < zippedRightUp.x + 1; ++xIdx) {
+      for (long yIdx = zippedLeftDown.y; yIdx < zippedRightUp.y + 1; ++yIdx) {
+        ++this->map[xIdx][yIdx];
+      }
     }
+  }
 }
 ```
 Implementation of query:
 ```cpp
-int QubicMapBuilding::queryPoint(const Point& point)
-{
-    Point zipped(findPos(this->zippedXs, point.x), findPos(this->zippedYs, point.y));
-    if (zipped.x == this->zippedXs.size() || // `point` is to the right of the rightmost point of rectangles
-        zipped.y == this->zippedYs.size() || // `point` is higher than the highest point of rectangles
-        (zipped.x == 0 && point.x < this->zippedXs[0]) || // `point` is to the left of the leftmost point of rectangles
-        (zipped.y == 0 && point.y < this->zippedYs[0]) // `point` is lower than the lowest point of rectangles
-        ) {
-        return 0; // `point` is out of the bounds
-    }
-    return this->map[zipped.x][zipped.y];
+int QubicMapBuilding::queryPoint(const Point &point) {
+  // We don't need to check top and right sides because 
+  // if the point is higher than the highest point of the highest rectangle
+  // or the point is to the right of the rightmost point of the rightmost rectangle
+  // this point's zipped coordinates will point to the free space that was composed
+  // thanks to our additional coordinates that we've saved in `QubicMapBuilding::buildInternals()`.
+  if (point.x < this->zippedXs[0] || point.y < this->zippedYs[0]) {
+    return 0;
+  }
+  std::size_t zippedX = findPos(this->zippedXs, point.x);
+  std::size_t zippedY = findPos(this->zippedYs, point.y);
+  return this->map[zippedX][zippedY];
 }
 ```
 Implementation of the util method `findPos(..)` that performs search for compressed indexes:
 ```cpp
-int QubicMapBuilding::findPos(std::vector<int>& items, int target) {
-    return std::upper_bound(items.begin(), items.end(), target) - items.begin() - 1;
+std::size_t QubicMapBuilding::findPos(std::vector<long> &items, long target) {
+  return std::upper_bound(items.begin(), items.end(), target) - items.begin() - 1;
 }
 ```
 
@@ -254,9 +253,9 @@ The solution requires a lazy persistent segment tree, which stores a number in e
 Let's start by describing the structure of a node. The node will contain three fields: a pointer to the left child, a pointer to the right child, and the accumulated sum in the node. By default, the pointers are `nullptr`, and the sum is `0`.
 ```cpp
 struct Node {
-    std::shared_ptr<Node> left = nullptr;
-    std::shared_ptr<Node> right = nullptr;
-    int summ = 0;
+  std::shared_ptr<Node> left = nullptr;
+  std::shared_ptr<Node> right = nullptr;
+  int summ = 0;
 };
 ```
 
@@ -269,44 +268,41 @@ Otherwise, we recursively descend into both children of the current root, creati
 In essence, this function returns new root node that corresponds to new 'state' of the segment tree.
 ```cpp
 std::shared_ptr<PersistentSegmentTree::Node> PersistentSegmentTree::addWithPersistence(
-    std::shared_ptr<Node> root, 
-    int left, 
-    int right, 
-    int rangeStart, 
-    int rangeEnd, 
+    std::shared_ptr<Node> root, std::size_t left, std::size_t right, std::size_t rangeStart, std::size_t rangeEnd,
     int value) {
-    if (left >= rangeEnd || right <= rangeStart) { // Condition 1
-        return root;
-    }
-    if (rangeStart <= left && right <= rangeEnd) { // Condition 2
-        std::shared_ptr<Node> newRoot(new Node(*root));
-        newRoot->summ += value;
-        return newRoot;
-    }
-    int middle = (left + right) / 2;
+  if (left >= rangeEnd || right <= rangeStart) {
+    return root;
+  }
+  if (rangeStart <= left && right <= rangeEnd) {
     std::shared_ptr<Node> newRoot(new Node(*root));
-    if (newRoot->left == nullptr) newRoot->left = std::shared_ptr<Node>(new Node);
-    newRoot->left = addWithPersistence(newRoot->left, left, middle, rangeStart, rangeEnd, value);
-    if (newRoot->right == nullptr) newRoot->right = std::shared_ptr<Node>(new Node);
-    newRoot->right = addWithPersistence(newRoot->right, middle, right, rangeStart, rangeEnd, value);
+    newRoot->summ += value;
     return newRoot;
+  }
+  std::size_t middle = (left + right) / 2;
+  std::shared_ptr<Node> newRoot(new Node(*root));
+  if (newRoot->left == nullptr) newRoot->left = std::shared_ptr<Node>(new Node);
+  newRoot->left = addWithPersistence(newRoot->left, left, middle, rangeStart, rangeEnd, value);
+  if (newRoot->right == nullptr) newRoot->right = std::shared_ptr<Node>(new Node);
+  newRoot->right = addWithPersistence(newRoot->right, middle, right, rangeStart, rangeEnd, value);
+  return newRoot;
 }
 ```
 
 Now, we can use root of the tree to collect information about how many subsegments cover the point `x`. In order to perform that we need to descend to the lowest hanging node that is exist and is covering the point `x`. We can do it using binary search:
 ```cpp
-int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left, int right, int targetIdx) {
-    if (right - left == 1) {
-        return root->summ;
-    }
-    int middle = (left + right) / 2;
-    if (targetIdx < middle) {
-        if (root->left == nullptr) return root->summ;
-        return root->summ + getTotalSum(root->left, left, middle, targetIdx);
-    } else {
-        if (root->right == nullptr) return root->summ;
-        return root->summ + getTotalSum(root->right, middle, right, targetIdx);
-    }
+int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, std::size_t left, std::size_t right,
+                                       std::size_t targetIdx) {
+  if (right - left == 1) {
+    return root->summ;
+  }
+  std::size_t middle = (left + right) / 2;
+  if (targetIdx < middle) {
+    if (root->left == nullptr) return root->summ;
+    return root->summ + getTotalSum(root->left, left, middle, targetIdx);
+  } else {
+    if (root->right == nullptr) return root->summ;
+    return root->summ + getTotalSum(root->right, middle, right, targetIdx);
+  }
 }
 ```
 If the current root corresponds to a subsegment of length `1`, then we simply return the accumulated sum. Otherwise, firstly, we calculate the middle point of the `[left; right)` subsegment, and depending on the location of the `targetIdx`, we recursively dive into the left or right branch if the branch exists. If it doesn't exist, we return the root's accumulated sum.
@@ -318,25 +314,25 @@ The key idea of the solution is to update the tree for each column (each compres
 Coordinate compression is implemented in a similar way as it was in the 2nd approach. The only difference is that we add not just rectangle's corners coordinates but also coordinates of the point that is 1 unit higher and 1 unit to the right of the right upper corner of the rectangle. We will need these coordinates for correct compressing of point coordinates and assignment of events' coordinates as well as for one-dimensional (along the y-coordinate) querying on segment tree.
 ```cpp
 void PersistentSegmentTree::makeZippedCoordsFromRectangles() {
-    for (const auto& rect : this->rectangles) {
-        this->zippedXs.push_back(rect.leftDown.x);
-        this->zippedXs.push_back(rect.rightUp.x);
-        this->zippedXs.push_back(rect.rightUp.x + 1);
-    }
-    
-    std::sort(this->zippedXs.begin(), this->zippedXs.end());
-    this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
-    this->zippedXs.shrink_to_fit();
+  for (const auto &rect : this->rectangles) {
+    this->zippedXs.push_back(rect.leftDown.x);
+    this->zippedXs.push_back(rect.rightUp.x);
+    this->zippedXs.push_back(rect.rightUp.x + 1);
+  }
 
-    for (const auto& rect : this->rectangles) {
-        this->zippedYs.push_back(rect.leftDown.y);
-        this->zippedYs.push_back(rect.rightUp.y);
-        this->zippedYs.push_back(rect.rightUp.y + 1);
-    }
+  std::sort(this->zippedXs.begin(), this->zippedXs.end());
+  this->zippedXs.erase(std::unique(this->zippedXs.begin(), this->zippedXs.end()), this->zippedXs.end());
+  this->zippedXs.shrink_to_fit();
 
-    std::sort(this->zippedYs.begin(), this->zippedYs.end());
-    this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
-    this->zippedYs.shrink_to_fit();
+  for (const auto &rect : this->rectangles) {
+    this->zippedYs.push_back(rect.leftDown.y);
+    this->zippedYs.push_back(rect.rightUp.y);
+    this->zippedYs.push_back(rect.rightUp.y + 1);
+  }
+
+  std::sort(this->zippedYs.begin(), this->zippedYs.end());
+  this->zippedYs.erase(std::unique(this->zippedYs.begin(), this->zippedYs.end()), this->zippedYs.end());
+  this->zippedYs.shrink_to_fit();
 }
 ```
 
@@ -346,12 +342,15 @@ Every rectangle has 4 sides. We need to create a sequence of sorted events each 
 Let's consider the structure of an event:
 ```cpp
 struct Event {
-    int zippedXIdx;
-    bool isOpening;
-    int zippedYIdxStart;
-    int zippedYIdxEnd;
-    Event(int zippedXIdx_, bool isOpening_, int zippedYIdxStart_, int zippedYIdxEnd_) 
-    : zippedXIdx(zippedXIdx_), isOpening(isOpening_), zippedYIdxStart(zippedYIdxStart_), zippedYIdxEnd(zippedYIdxEnd_) {}
+  std::size_t zippedXIdx;
+  bool isOpening;
+  std::size_t zippedYIdxStart;
+  std::size_t zippedYIdxEnd;
+  Event(std::size_t zippedXIdx_, bool isOpening_, std::size_t zippedYIdxStart_, std::size_t zippedYIdxEnd_)
+      : zippedXIdx(zippedXIdx_),
+        isOpening(isOpening_),
+        zippedYIdxStart(zippedYIdxStart_),
+        zippedYIdxEnd(zippedYIdxEnd_) {}
 };
 ```
 There `zippedXIdx` is the compressed x-coordinate of the left or right side of some rectangle. `isOpening` is a marker representing whether it is a left or right side (left if `true`, `false` otherwise, because we process events from left to right along the x-axis and the left side 'opens' the rectangle, whereas the right side `closes` it). `zippedYIdxStart` is the compressed y-coordinate of the left bottom corner of the rectangle, and also it is the beginning of the subsegment that corresponds to that rectangle's side. `zippedYIdxEnd` is the compressed y-coordinate of the point 1 unit higher and 1 unit to the right of the right top corner of the rectangle, and also it is the exclusive end of the subsegment that corresponds to that rectangle's side.
@@ -359,52 +358,58 @@ There `zippedXIdx` is the compressed x-coordinate of the left or right side of s
 Now checkout the implementation of events creation:
 ```cpp
 void PersistentSegmentTree::buildInternals() {
-    makeZippedCoordsFromRectangles(); // Compresse rectangles' coordinates and save compressed into `this->zippedXs` and `this->zippedYs`
+  // Compress rectangles' coordinates and save them to `this->zippedXs` and `this->zippedYs`.
+  makeZippedCoordsFromRectangles();
 
-    std::vector<Event> events;                      // Place where we will store our events.
-    events.reserve(2 * this->rectangles.size());    // Reserve 2 * 'number of rectangles' memory so the vector won't need to reallocate memory.
+  std::vector<Event> events;
+  // Reserve 2*N memory so vector won't spend time on reallocating.
+  events.reserve(this->rectangles.size());
+  
+  for (const auto &rect : this->rectangles) {
+    // Create opening event that will take its place when sweepline reaches zipped(rect.leftDown.x) coordinate.
+    // Essentially, this event will add 1 on the subsegment `[zipped(rect.leftDown.y), zipped(rect.rightUp.y + 1))`.
+    events.emplace_back(findPos(this->zippedXs, rect.leftDown.x), 1, findPos(this->zippedYs, rect.leftDown.y),
+                        findPos(this->zippedYs, rect.rightUp.y + 1));
+    // Create closing event that will take its place when sweepline reaches zipped(rect.rightUp.x + 1) coordinate.
+    // Essentially, this event will subtract 1 on the subsegment `[zipped(rect.leftDown.y), zipped(rect.rightUp.y + 1))`.
+    events.emplace_back(findPos(this->zippedXs, rect.rightUp.x + 1), 0, findPos(this->zippedYs, rect.leftDown.y),
+                        findPos(this->zippedYs, rect.rightUp.y + 1));
+  }
 
-    for (const auto& rect : this->rectangles) {
-        events.emplace_back(                            // Opening event:
-            findPos(this->zippedXs, rect.leftDown.x),   // zippedX index,
-            1,                                          // isOpening = true,
-            findPos(this->zippedYs, rect.leftDown.y),   // zippedYRangeStart: beginning of the subsegment on which we should add 1,
-            findPos(this->zippedYs, rect.rightUp.y + 1) // zippedYRangeEnd: if subsegment is [l; r], it equals to 'r + 1',
-        );                                              // so we can perform addition on [l; r + 1).
-        events.emplace_back(                            // Closing event:
-            findPos(this->zippedXs, rect.rightUp.x + 1),// zippedX index,
-            0,                                          // isOpening = false,
-            findPos(this->zippedYs, rect.leftDown.y),   // zippedYRangeStart: beginning of the subsegment on which we should subtract 1,
-            findPos(this->zippedYs, rect.rightUp.y + 1) // zippedYRangeEnd: if subsegment is [l; r], it equals to 'r + 1',
-        );                                              // so we can perform subtraction on [l; r + 1).
+  // Free the memory allocated for storing rectangles. If you don't do it, you may face MLE (Memory Limit Exceeded error).
+  // Or may not, to be honest, I didn't check it.
+  this->rectangles.clear();
+  this->rectangles.shrink_to_fit();
+
+  // Sort events in ascending order according to their zipped x-coordinates
+  std::sort(events.begin(), events.end(),
+            [](const Event &e1, const Event &e2) { return e1.zippedXIdx < e2.zippedXIdx; });
+
+  // Create empty (for a while) root
+  std::shared_ptr<Node> root(new Node);
+
+  std::size_t prevZippedX = events[0].zippedXIdx;
+  for (const auto &event : events) {
+    // If current event is not on the same zipped x-coordinate, we need to save current root
+    // in order to be able to timewarp ourselves to that moment and query the point using
+    // this state of the tree.
+    if (event.zippedXIdx != prevZippedX) {
+      this->roots.push_back(root);
+      this->zippedRootsXIdxs.push_back(prevZippedX);
+      // Update the `currently working on` zipped x-coordinate
+      prevZippedX = event.zippedXIdx;
     }
-
-    this->rectangles.clear();           // We clear the vector containing rectangles
-    this->rectangles.shrink_to_fit();   // and shrink its capacity so it frees the allocated memory. 
-                                        // If you don't do it, you may face MLE (Memory Limit Exceeded) status. Or may not, I didn't check it.
-
-    std::sort(events.begin(), events.end(), [](const Event& e1, const Event& e2) {  // Sort events in ascending order according to their
-        return e1.zippedXIdx < e2.zippedXIdx;                                       // zipped x-coordinates.
-    });
-
-    std::shared_ptr<Node> root(new Node);   // Create empty (for a while) root
-
-    int prevZippedX = events[0].zippedXIdx; // Remember the zipped x-coordinate of the first event.
-    for (std::size_t eventIdx = 0; eventIdx < events.size(); ++eventIdx) {  // Iterate over all events.
-        if (events[eventIdx].zippedXIdx != prevZippedX) {   // If current event is not on the same zipped x-coordinate,
-            this->roots.push_back(root);                    // preserve current root
-            this->zippedRootsXIdxs.push_back(prevZippedX);  // and the corresponding zipped x-coordinate.
-            prevZippedX = events[eventIdx].zippedXIdx;      // Update current 'working on' zipped x-coordinate.
-        }
-        root = addWithPersistence(                                            // Perform the 'event' (obtaining new root because of persistence)
-            root,                                                             // on the 'root' root
-            0, this->zippedYs.size(),                                         // with the segment tree's leftmost index and rightmost (exclusive)
-            events[eventIdx].zippedYIdxStart, events[eventIdx].zippedYIdxEnd, // on subsegment [zippedYIdxStart, zippedYIdxEnd)
-            events[eventIdx].isOpening ? 1 : -1                               // adding/subtracting 1.
-            );
-    }
-    this->zippedRootsXIdxs.push_back(prevZippedX);  // Save the last root's zipped x-coordinate.
-    this->roots.push_back(root);                    // Preserve the last updated root (Invariant is: all of this root's nodes contain zero as their sum).
+    // Perform the 'event' (after event finish, we will get new root with applied changes)
+    // on the current root. Initial subsegment of the whole tree is `[0, this->zippedYs.size())`.
+    // Targeted subsegment is `[event.zippedYIdxStart, event.zippedYIdxEnd).
+    // If the `event` is `addition` than we set +1, otherwise -1.
+    root = addWithPersistence(root, 0, this->zippedYs.size(), event.zippedYIdxStart, event.zippedYIdxEnd,
+                              event.isOpening ? 1 : -1);
+  }
+  // Save the last root's zipped x-coordinate.
+  this->zippedRootsXIdxs.push_back(prevZippedX);
+  // Preserve the last updated root (Invariant is: all of this root's nodes contain zero as their sum).
+  this->roots.push_back(root);
 }
 ```
 
@@ -415,32 +420,32 @@ Initially, we need to check whether the point is even within the working area, i
 
 If the point is within the working area, we find the corresponding compressed coordinates, which will be the maximum coordinates that are also less than or equal to those of the point. Then, in the array of saved compressed x-coordinates of the roots of the persistent segment tree, we find the root with the maximum index of compressed x-coordinate that is also less than or equal to that of the compressed input point. Once we obtain the root, we simply perform a one-dimensional query on it to obtain the accumulated sum over all subsegments that include the compressed y-coordinate of the point.
 ```cpp
-int PersistentSegmentTree::queryPoint(const Point& point) {
-    if (point.x > this->zippedXs.back() || // `point` is to the right of the rightmost point of rectangles
-        point.y > this->zippedYs.back() || // `point` is higher than the highest point of rectangles
-        point.x < this->zippedXs.front() || // `point` is to the left of the leftmost point of rectangles
-        point.y < this->zippedYs.front() // `point` is lower than the lowest point of rectangles
-        ) {
-        return 0; // `point` is out of the bounds
-    }
-    int zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1; // Find compressed x-coordinate of the point.
-    int zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1; // Find compressed y-coordinate of the point.
-    // Find the required root:
-    std::shared_ptr<Node> targetRoot = this->roots[findUpperPos(this->zippedRootsXIdxs, zippedXIdx) - 1];
-    // Return the result of query on the 'targetRoot' (one-dimensional query on a rectangle's side)
-    return getTotalSum(targetRoot, 0, this->zippedYs.size(), zippedYIdx);
+int PersistentSegmentTree::queryPoint(const Point &point) {
+  // This part is almost the same as in QubicMapBuilding.
+  if (point.x < this->zippedXs[0] || point.y < this->zippedYs[0]) {
+    return 0;
+  }
+  std::size_t zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1;
+  std::size_t zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1;
+  // Here we need to find the state of the tree in which it was in the moment of
+  // processing zippedXIdx.
+  std::shared_ptr<Node> targetRoot = this->roots[findUpperPos(this->zippedRootsXIdxs, zippedXIdx) - 1];
+  // Simply making one-dimensional query to the tree.
+  return getTotalSum(targetRoot, 0, this->zippedYs.size(), zippedYIdx);
 }
 ```
 Implementation of the util method `findUpperPos(..)` that performs search for compressed indexes that are `>`:
 ```cpp
-int PersistentSegmentTree::findUpperPos(std::vector<int>& items, int target) {
-    return std::upper_bound(items.begin(), items.end(), target) - items.begin();
+template <class T>
+std::size_t findUpperPos(std::vector<T>& items, T target) {
+  return std::upper_bound(items.begin(), items.end(), target) - items.begin();
 }
 ```
 Implementation of the util method `findPos(..)` that performs search for compressed indexes that are `>=`:
 ```cpp
-int PersistentSegmentTree::findPos(std::vector<int>& items, int target) {
-    return std::lower_bound(items.begin(), items.end(), target) - items.begin();
+template <class T>
+std::size_t findPos(std::vector<T>& items, T target) {
+  return std::lower_bound(items.begin(), items.end(), target) - items.begin();
 }
 ```
 
@@ -485,31 +490,47 @@ All benchmarks are in `main.cpp` file, you can go and check them out manually or
 
 Base structure of all benchmarks that measure building phase looks like that:
 ```cpp
-static void BM_Building_NaiveRectangleEnumeration(benchmark::State& state) {
-  for (auto _ : state) {    // Starts the timer for each iteration (i.e. one distinct measurement)
-    state.PauseTiming();    // Pause timing for test generation process to prevent contamination of results
-    auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0)); // Generate rectangles for the test
-    auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));  // Move input data inside the algorithm preset (without starting building the internals)
-    state.ResumeTiming();   // Resume timing to count the `buildInternals()` time consumption
-    
-    algorithm.buildInternals(); // The actual `building phase` being measured
+static void BM_Building_NaiveRectangleEnumeration(benchmark::State &state) {
+  // Starts the timer for each iteration (i.e. one distinct measurement)
+  for (auto _ : state) {
+    // Pause timing for test generation process to prevent contamination of results.
+    state.PauseTiming();
+    // Generate rectangles for the test
+    auto rectangles = getRectangles(state.range(0));
+    // Move input data inside the algorithm preset (without starting building the internals)
+    auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));
+    // Resume timing to count the `buildInternals()` time consumption
+    state.ResumeTiming();
+
+    // The actual `building phase` being measured
+    algorithm.buildInternals();
   }
 }
 ```
 Base structure of all benchmarks that measure average per query complexity looks like that:
 ```cpp
-static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State& state) {
-  auto rectangles = TestCaseGenerator::generateRecommendedRectangles(state.range(0));   // Generate rectangles for the test
-  auto points = TestCaseGenerator::generateUniformlyDistributedPoints(state.range(0), 0, state.range(0) * 20, 0, state.range(0) * 20, XSEED, YSEED);    // Generate points for the test
-  int currentIdx = 0;   // Set the current point index (we will measure average query time complexity looping through 'points')
-  auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));    // Move input data inside the algorithm preset (without starting building the internals)
-  algorithm.buildInternals();   // Build the internals
+static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State &state) {
+  // Generate rectangles for the test
+  auto rectangles = getRectangles(state.range(0));
+  // Generate points for the test
+  auto points = getPoints(state.range(0));
+  // Set the current point index (we will measure average query time complexity looping through 'points')
+  std::size_t currentIdx = 0;
+  // Move input data inside the algorithm preset (without starting building the internals)
+  auto algorithm = NaiveRectangleEnumeration(std::move(rectangles));
+  // Build the internals
+  algorithm.buildInternals();
 
-  for (auto _ : state) {    // Starts the timer for each iteration (i.e. one distinct measurement)
-    algorithm.queryPoint(points[currentIdx++]); // Query the `currentIdx`th point
-    state.PauseTiming();    // Stop measurements to prevent %= from creating noises in results (probably can be removed)
+  // Starts the timer for each iteration (i.e. one distinct measurement)
+  for (auto _ : state) {
+    // Query the `currentIdx`th point
+    algorithm.queryPoint(points[currentIdx++]);
+
+    // Stop measurements to prevent %= from creating noises in results (probably can be removed)
+    state.PauseTiming();
     currentIdx %= points.size();
-    state.ResumeTiming();   // Resume measurements
+    // Resume measurements
+    state.ResumeTiming();
   }
 }
 ```
