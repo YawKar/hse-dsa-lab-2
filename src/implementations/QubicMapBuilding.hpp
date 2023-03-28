@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "AbstractImplementation.h"
+#include "AbstractImplementation.hpp"
 
 class QubicMapBuilding : AbstractImplementation {
  public:
@@ -12,11 +12,11 @@ class QubicMapBuilding : AbstractImplementation {
   int queryPoint(const Point& point);
 
  protected:
-  std::vector<int> zippedXs;
-  std::vector<int> zippedYs;
+  std::vector<long> zippedXs;
+  std::vector<long> zippedYs;
   std::vector<std::vector<int>> map;
 
-  int findPos(std::vector<int>& items, int target);
+  std::size_t findPos(std::vector<long>& items, long target);
 };
 
 #endif  // QUBIC_MAP_BUILDING_HPP

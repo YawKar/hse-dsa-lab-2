@@ -2,7 +2,7 @@
 #define ABSTRACT_IMPLEMENTATION_HPP
 #include <vector>
 
-#include "../common/Rectangle.h"
+#include "../common/Rectangle.hpp"
 
 class AbstractImplementation {
  public:

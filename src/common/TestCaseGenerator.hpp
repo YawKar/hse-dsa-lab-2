@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "Rectangle.h"
+#include "Rectangle.hpp"
 
 class TestCaseGenerator {
  public:

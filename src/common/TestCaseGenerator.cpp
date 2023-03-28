@@ -1,4 +1,4 @@
-#include "TestCaseGenerator.h"
+#include "TestCaseGenerator.hpp"
 
 std::vector<Rectangle> TestCaseGenerator::generateRecommendedRectangles(
     int numberOfRectangles) {

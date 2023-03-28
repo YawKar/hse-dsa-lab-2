@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "AbstractImplementation.h"
+#include "AbstractImplementation.hpp"
 
 class NaiveRectangleEnumeration : AbstractImplementation {
  public:

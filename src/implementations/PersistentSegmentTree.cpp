@@ -1,34 +1,17 @@
-#include "PersistentSegmentTree.h"
+#include "PersistentSegmentTree.hpp"
 
 #include <algorithm>
 
 PersistentSegmentTree::PersistentSegmentTree(
-    std::vector<Rectangle> &&rectangles)
-    : AbstractImplementation(std::move(rectangles)) {}
-
-int PersistentSegmentTree::findPos(std::vector<int> &items, int target) {
-  return std::lower_bound(items.begin(), items.end(), target) - items.begin();
-}
-
-int PersistentSegmentTree::findUpperPos(std::vector<int> &items, int target) {
-  return std::upper_bound(items.begin(), items.end(), target) - items.begin();
-}
+    std::vector<Rectangle> &&rectangles_)
+    : AbstractImplementation(std::move(rectangles_)) {}
 
 int PersistentSegmentTree::queryPoint(const Point &point) {
-  if (point.x > this->zippedXs.back() ||   // `point` is to the right of the
-                                           // rightmost point of rectangles
-      point.y > this->zippedYs.back() ||   // `point` is higher than the highest
-                                           // point of rectangles
-      point.x < this->zippedXs.front() ||  // `point` is to the left of the
-                                           // leftmost point of rectangles
-      point.y <
-          this->zippedYs
-              .front()  // `point` is lower than the lowest point of rectangles
-  ) {
-    return 0;  // `point` is out of the bounds
+  if (point.x < this->zippedXs[0] || point.y < this->zippedYs[0]) {
+    return 0;
   }
-  int zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1;
-  int zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1;
+  std::size_t zippedXIdx = findUpperPos(this->zippedXs, point.x) - 1;
+  std::size_t zippedYIdx = findUpperPos(this->zippedYs, point.y) - 1;
   std::shared_ptr<Node> targetRoot =
       this->roots[findUpperPos(this->zippedRootsXIdxs, zippedXIdx) - 1];
   return getTotalSum(targetRoot, 0, this->zippedYs.size(), zippedYIdx);
@@ -60,12 +43,13 @@ void PersistentSegmentTree::makeZippedCoordsFromRectangles() {
   this->zippedYs.shrink_to_fit();
 }
 
-int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left,
-                                       int right, int targetIdx) {
+int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root,
+                                       std::size_t left, std::size_t right,
+                                       std::size_t targetIdx) {
   if (right - left == 1) {
     return root->summ;
   }
-  int middle = (left + right) / 2;
+  std::size_t middle = (left + right) / 2;
   if (targetIdx < middle) {
     if (root->left == nullptr) return root->summ;
     return root->summ + getTotalSum(root->left, left, middle, targetIdx);
@@ -76,9 +60,10 @@ int PersistentSegmentTree::getTotalSum(std::shared_ptr<Node> root, int left,
 }
 
 std::shared_ptr<PersistentSegmentTree::Node>
-PersistentSegmentTree::addWithPersistence(std::shared_ptr<Node> root, int left,
-                                          int right, int rangeStart,
-                                          int rangeEnd, int value) {
+PersistentSegmentTree::addWithPersistence(std::shared_ptr<Node> root,
+                                          std::size_t left, std::size_t right,
+                                          std::size_t rangeStart,
+                                          std::size_t rangeEnd, int value) {
   if (left >= rangeEnd || right <= rangeStart) {
     return root;
   }
@@ -87,7 +72,7 @@ PersistentSegmentTree::addWithPersistence(std::shared_ptr<Node> root, int left,
     newRoot->summ += value;
     return newRoot;
   }
-  int middle = (left + right) / 2;
+  std::size_t middle = (left + right) / 2;
   std::shared_ptr<Node> newRoot(new Node(*root));
   if (newRoot->left == nullptr) newRoot->left = std::shared_ptr<Node>(new Node);
   newRoot->left = addWithPersistence(newRoot->left, left, middle, rangeStart,
@@ -122,7 +107,7 @@ void PersistentSegmentTree::buildInternals() {
 
   std::shared_ptr<Node> root(new Node);
 
-  int prevZippedX = events[0].zippedXIdx;
+  std::size_t prevZippedX = events[0].zippedXIdx;
   for (std::size_t eventIdx = 0; eventIdx < events.size(); ++eventIdx) {
     if (events[eventIdx].zippedXIdx != prevZippedX) {
       this->roots.push_back(root);

@@ -3,10 +3,10 @@
 
 class Point {
  public:
-  int x;
-  int y;
+  long x;
+  long y;
 
-  Point(int x_ = 0, int y_ = 0) : x(x_), y(y_) {}
+  Point(long x_ = 0, long y_ = 0) : x(x_), y(y_) {}
 };
 
 #endif  // POINT_HPP

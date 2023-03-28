@@ -1,32 +1,22 @@
-#include "QubicMapBuilding.h"
+#include "QubicMapBuilding.hpp"
 
 #include <algorithm>
 
-QubicMapBuilding::QubicMapBuilding(std::vector<Rectangle> &&rectangles)
-    : AbstractImplementation(std::move(rectangles)) {}
+QubicMapBuilding::QubicMapBuilding(std::vector<Rectangle> &&rectangles_)
+    : AbstractImplementation(std::move(rectangles_)) {}
 
-int QubicMapBuilding::findPos(std::vector<int> &items, int target) {
+std::size_t QubicMapBuilding::findPos(std::vector<long> &items, long target) {
   return std::upper_bound(items.begin(), items.end(), target) - items.begin() -
          1;
 }
 
 int QubicMapBuilding::queryPoint(const Point &point) {
-  Point zipped(findPos(this->zippedXs, point.x),
-               findPos(this->zippedYs, point.y));
-  if (zipped.x == this->zippedXs.size() ||  // `point` is to the right of the
-                                            // rightmost point of rectangles
-      zipped.y == this->zippedYs.size() ||  // `point` is higher than the
-                                            // highest point of rectangles
-      (zipped.x == 0 &&
-       point.x < this->zippedXs[0]) ||  // `point` is to the left of the
-                                        // leftmost point of rectangles
-      (zipped.y == 0 &&
-       point.y < this->zippedYs[0])  // `point` is lower than the lowest point
-                                     // of rectangles
-  ) {
-    return 0;  // `point` is out of the bounds
+  if (point.x < this->zippedXs[0] || point.y < this->zippedYs[0]) {
+    return 0;
   }
-  return this->map[zipped.x][zipped.y];
+  std::size_t zippedX = findPos(this->zippedXs, point.x);
+  std::size_t zippedY = findPos(this->zippedYs, point.y);
+  return this->map[zippedX][zippedY];
 }
 
 void QubicMapBuilding::buildInternals() {
@@ -58,8 +48,8 @@ void QubicMapBuilding::buildInternals() {
                          findPos(this->zippedYs, rect.leftDown.y));
     Point zippedRightUp(findPos(this->zippedXs, rect.rightUp.x),
                         findPos(this->zippedYs, rect.rightUp.y));
-    for (int xIdx = zippedLeftDown.x; xIdx < zippedRightUp.x + 1; ++xIdx) {
-      for (int yIdx = zippedLeftDown.y; yIdx < zippedRightUp.y + 1; ++yIdx) {
+    for (long xIdx = zippedLeftDown.x; xIdx < zippedRightUp.x + 1; ++xIdx) {
+      for (long yIdx = zippedLeftDown.y; yIdx < zippedRightUp.y + 1; ++yIdx) {
         ++this->map[xIdx][yIdx];
       }
     }
