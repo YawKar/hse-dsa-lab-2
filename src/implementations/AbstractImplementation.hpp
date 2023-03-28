@@ -6,8 +6,7 @@
 
 class AbstractImplementation {
  public:
-  AbstractImplementation(std::vector<Rectangle>&& rectangles_)
-      : rectangles(std::move(rectangles_)) {}
+  AbstractImplementation(std::vector<Rectangle>&& rectangles_) : rectangles(std::move(rectangles_)) {}
 
   virtual void buildInternals() = 0;
   virtual int queryPoint(const Point& point) = 0;

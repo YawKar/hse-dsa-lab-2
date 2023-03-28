@@ -25,8 +25,7 @@ class PersistentSegmentTree : AbstractImplementation {
     bool isOpening;
     std::size_t zippedYIdxStart;
     std::size_t zippedYIdxEnd;
-    Event(std::size_t zippedXIdx_, bool isOpening_,
-          std::size_t zippedYIdxStart_, std::size_t zippedYIdxEnd_)
+    Event(std::size_t zippedXIdx_, bool isOpening_, std::size_t zippedYIdxStart_, std::size_t zippedYIdxEnd_)
         : zippedXIdx(zippedXIdx_),
           isOpening(isOpening_),
           zippedYIdxStart(zippedYIdxStart_),
@@ -47,12 +46,9 @@ class PersistentSegmentTree : AbstractImplementation {
     return std::upper_bound(items.begin(), items.end(), target) - items.begin();
   }
   void makeZippedCoordsFromRectangles();
-  std::shared_ptr<Node> addWithPersistence(std::shared_ptr<Node> root,
-                                           std::size_t left, std::size_t right,
-                                           std::size_t rangeStart,
-                                           std::size_t rangeEnd, int value);
-  int getTotalSum(std::shared_ptr<Node> root, std::size_t left,
-                  std::size_t right, std::size_t targetIdx);
+  std::shared_ptr<Node> addWithPersistence(std::shared_ptr<Node> root, std::size_t left, std::size_t right,
+                                           std::size_t rangeStart, std::size_t rangeEnd, int value);
+  int getTotalSum(std::shared_ptr<Node> root, std::size_t left, std::size_t right, std::size_t targetIdx);
 };
 
 #endif  // PERSISTENT_SEGMENT_TREE_HPP
