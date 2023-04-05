@@ -17,7 +17,7 @@ The objective of this laboratory work is to compare the performance of multiple 
 3. [Test Case Generation](#test-case-generation)
 4. [First Approach: Naive Brute Force Algorithm](#first-approach-naive-brute-force-algorithm)
 5. [Second Approach: Compressed Coordinate Map Construction](#second-approach-compressed-coordinate-map-construction)
-6. [Third Approach: Lazy Persistent Segment Tree on Compressed Coordinates](#third-approach-persistent-segment-tree-on-compressed-coordinates)
+6. [Third Approach: Lazy Persistent Segment Tree on Compressed Coordinates](#third-approach-lazy-persistent-segment-tree-on-compressed-coordinates)
     - [Lazy Persistent Segment Tree](#lazy-persistent-segment-tree)
     - [Key idea: event-driven updates with preservation of the history of tree state](#key-idea-event-driven-updates-with-preservation-of-the-history-of-tree-state)
     - [Coordinate compression](#coordinate-compression)
