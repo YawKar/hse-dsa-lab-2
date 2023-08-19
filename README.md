@@ -7,8 +7,8 @@ The objective of this laboratory work is to compare the performance of multiple 
 1. [Problem Statement and Constraints](#problem-statement-and-constraints)
     - [Problem Statement](#problem-statement)
     - [Constraints](#constraints)
-        1. [Rectangles](#rectangles)
-        2. [Points](#points)
+        - [Rectangles](#rectangles)
+        - [Points](#points)
 2. [Utilized Software Toolset](#utilized-software-toolset)
     - [C++](#c)
     - [Conan 2.0](#conan-20)
@@ -570,12 +570,12 @@ static void BM_PerRequest_NaiveRectangleEnumeration(benchmark::State &state) {
 Thanks to the [Google Benchmark library](https://github.com/google/benchmark), there a whole bunch of useful options that one can use to specify the benchmarking process. You can see the full list on [official user guide](https://google.github.io/benchmark/user_guide.html).
 
 I frequently used these:
-- \``./lab_benchmarks --benchmark_filter=<regex>`\` 
+1. \``./lab_benchmarks --benchmark_filter=<regex>`\` 
     
     Run benchmarks with names satisfying the given `regex`. 
     
     Example: \``--benchmark_filter=.*Building.*QubicMapBuilding`\` (will run only building phase benchmarks that use `QubicMapBuilding` algorithm)
-- \``./lab_benchmarks --benchmark_out=<filename>`\`
+2. \``./lab_benchmarks --benchmark_out=<filename>`\`
     
     Write benchmark results to a file. 
     
